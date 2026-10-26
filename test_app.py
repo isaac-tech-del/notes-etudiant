@@ -31,3 +31,12 @@ def test_recherche_etudiant():
     notes = reponse.get_json()
     assert len(notes) > 0
     assert notes[0]["note"] == 15.5
+    
+def test_version():
+    response = client.get("/version")
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+    assert data["application"] == "notes-etudiant"
+    assert data["version"] == "1.0.0"

@@ -75,8 +75,12 @@ def lister_notes():
             for r in rows
         ]
     )
-
-
+@app.route("/version")
+def version():
+    return jsonify(
+        application="notes-etudiant",
+        version="1.0.0"
+    )
 # Démarrer le serveur
 if __name__ == "__main__":
     app.run(
