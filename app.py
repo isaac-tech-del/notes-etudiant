@@ -49,7 +49,7 @@ def accueil():
 # Vérifier le fonctionnement de l'application
 @app.route("/health")
 def health():
-    return jsonify(status="ok")
+    return jsonify(status="ok",version="1.0")
 
 
 # Consulter et rechercher les notes
