@@ -49,7 +49,7 @@ def accueil():
 # Vérifier le fonctionnement de l'application
 @app.route("/health")
 def health():
-    return jsonify(status="ok")
+    return jsonify(status="ok",version="1.0")
 
 
 # Consulter et rechercher les notes
@@ -75,8 +75,12 @@ def lister_notes():
             for r in rows
         ]
     )
-
-
+@app.route("/version")
+def version():
+    return jsonify(
+        application="notes-etudiant",
+        version="1.0.0"
+    )
 # Démarrer le serveur
 if __name__ == "__main__":
     app.run(
