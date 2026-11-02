@@ -1,0 +1,10 @@
+
+{
+  "EXEMPLE_TOKEN_ETUDIANT": {
+    "role": "etudiant",
+    "etudiant": "Amina"
+  },
+  "EXEMPLE_TOKEN_ENSEIGNANT": {
+    "role": "enseignant"
+  }
+}

@@ -1,11 +1,13 @@
+
 import os
 import sqlite3
 from flask import Flask, jsonify, request
+from auth import obtenir_utilisateur
 
 app = Flask(__name__)
 
 # Fichier où sont conservées les notes
-DB = "notes.db"
+DB = os.path.join(os.path.dirname(__file__), "notes.db")
 
 
 # Initialisation de la base de données
@@ -49,14 +51,35 @@ def accueil():
 # Vérifier le fonctionnement de l'application
 @app.route("/health")
 def health():
-    return jsonify(status="ok",version="1.0")
+    return jsonify(status="ok", version="1.0")
 
 
-# Consulter et rechercher les notes
+# Consulter les notes avec authentification
 @app.route("/notes")
 def lister_notes():
+    # Vérifier le jeton d'authentification
+    authorization = request.headers.get("Authorization", "")
+
+    if not authorization.startswith("Bearer "):
+        return jsonify(error="Jeton manquant ou invalide"), 401
+
+    jeton = authorization[len("Bearer "):].strip()
+    utilisateur = obtenir_utilisateur(jeton)
+
+    if utilisateur is None:
+        return jsonify(error="Jeton manquant ou invalide"), 401
+
+    # Vérifier le rôle de l'utilisateur
     etudiant = request.args.get("etudiant", "")
 
+    if utilisateur.get("role") == "etudiant":
+        # L'étudiant consulte uniquement ses propres notes
+        etudiant = utilisateur.get("etudiant", "")
+
+    elif utilisateur.get("role") != "enseignant":
+        return jsonify(error="Accès interdit"), 403
+
+    # Récupérer les notes depuis la base de données
     with sqlite3.connect(DB) as con:
         rows = con.execute(
             "SELECT id, etudiant, module, note "
@@ -64,26 +87,31 @@ def lister_notes():
             (f"%{etudiant}%",),
         ).fetchall()
 
-    return jsonify(
-        [
-            {
-                "id": r[0],
-                "etudiant": r[1],
-                "module": r[2],
-                "note": r[3],
-            }
-            for r in rows
-        ]
-    )
+    return jsonify([
+        {
+            "id": r[0],
+            "etudiant": r[1],
+            "module": r[2],
+            "note": r[3],
+        }
+        for r in rows
+    ])
+
+
+# Afficher la version de l'application
 @app.route("/version")
 def version():
     return jsonify(
         application="notes-etudiant",
         version="1.0.0"
     )
+
+
 # Démarrer le serveur
 if __name__ == "__main__":
     app.run(
         host=os.environ.get("APP_HOST", "127.0.0.1"),
         port=5000,
+        debug=False,
     )
+
